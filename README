@@ -1,0 +1,7 @@
+A CTF-Server for attack/defense style games. Pluggable modules to be
+readily configured with vulnerable services on the go.
+
+Anyone interested in contributing to the codebase or the library of 
+vulnerable services are always welcome.
+
+WIP
