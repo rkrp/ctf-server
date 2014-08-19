@@ -3,6 +3,7 @@
 from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
 from protocols import FlagServer
+import CTFConfig
 
 
 def main():

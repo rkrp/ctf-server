@@ -17,7 +17,7 @@ class FlagServer(Protocol):
 							"I only want cool new flags, not age-old ones like yours",
 							]
 
-		self.invalid_team = "Invalid Team name"
+		self.invalid_team = "Invalid Team number"
 		self.invalid_syntax = "Submit flag in format:\nTEAM# 32-DIGIT-FLAG"
 						
 	def dataReceived(self, data):
