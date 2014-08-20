@@ -4,12 +4,14 @@ from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
 import validator
 from random import randint
+from db import *
+import datetime
 
 class FlagServer(Protocol):
 	def __init__(self):
 		self.invalid_flag = ["Nope! Flag is invalid :(",
 							"Do you really call that a flag?",
-							"^[0-9a-f]$ Hmph!",
+							"^[0-9a-f{32}]$ Hmph!",
 							"Well, lemme check... Nope, not a flag!",
 							]
 		self.expired_flag = ["Too late! Flag's gone :('",
@@ -19,12 +21,11 @@ class FlagServer(Protocol):
 
 		self.invalid_team = "Invalid Team number"
 		self.invalid_syntax = "Submit flag in format:\nTEAM# 32-DIGIT-FLAG"
+		self.congrats = "Congrats! You've earned yourself some points"
+		self.own_flag = "You must be really really high."
 						
 	def dataReceived(self, data):
-		self.data_parser(data)
-		#self.transport.write(data)
-
-	def data_parser(self, data):
+		data = data.strip()
 		ret = data.split(" ")
 		if not len(ret) == 2:
 			self.say_invalid_syntax()
@@ -43,11 +44,64 @@ class FlagServer(Protocol):
 			self.say_invalid_flag()
 			return
 			
-		self.send_msg('Congrats!')
-						
+		id_flag = self.is_flag_valid(team, flag)
+		if id_flag:
+			pwned(team, id_flag)
+			self.send_msg("Got it! Valid Flag!")
+			return
+
+		if self.is_flag_expired(team, flag):
+			self.say_expired_flag()
+			return
+
+		if self.is_own_flag(team, flag):
+			self.send_msg(self.own_flag)
+			return
+
+		#If nothing is done :(
+		self.send_msg("We know no flag by that name")
+		return
+			
+	def	pwned(byteam, flagid):
+		if Pwn.insert(id_team=byteam, id_flag=flagid).execute():
+			return True
+		else:
+			return False
+
+	def is_flag_valid(self, team, flag):
+		try:
+			expr = ((Flag.doc_time >= datetime.datetime.now() - \
+				datetime.timedelta(minutes=15)) and Flag.id_team != team \
+				and Flag.flag == flag)
+			db_flag = Flag.get(expr)
+			return db_flag.id_flag
+		except Flag.DoesNotExist:
+			return False
+
+	def is_flag_expired(self, team, flag):
+		try:
+			expr = (Flag.doc_time < datetime.datetime.now() - \
+				datetime.timedelta(minutes=15)) and Flag.id_team != team \
+				and Flag.flag == flag
+			Flag.get(expr)
+			return True
+		except Flag.DoesNotExist:
+			return False
+
+	def is_own_flag(self, team, flag):
+		try:
+			Flag.get(Flag.flag == flag and Flag.id_team == team)
+			return True
+		except:
+			return False
+
 	def say_invalid_flag(self):
 		msg_index = randint(0, len(self.invalid_flag) - 1)
 		self.send_msg(self.invalid_flag[msg_index])
+
+	def say_expired_flag(self):
+		msg_index = randint(0, len(self.expired_flag) - 1)
+		self.send_msg(self.expired_flag[msg_index])
 
 	def say_invalid_syntax(self):
 		self.send_msg(self.invalid_syntax)

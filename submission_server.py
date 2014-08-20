@@ -5,11 +5,10 @@ from twisted.internet import reactor
 from protocols import FlagServer
 import CTFConfig
 
-
 def main():
     f = Factory()
     f.protocol = FlagServer
-    reactor.listenTCP(8000, f)
+    reactor.listenTCP(CTFConfig.FlagServer.port, f)
     print "Flag server up and running!"
     reactor.run()
     

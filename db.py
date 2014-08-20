@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from CTFConfig import CTFConfig
+import CTFConfig
 from peewee import *
 
 db = MySQLDatabase(CTFConfig.DB.db_name,
